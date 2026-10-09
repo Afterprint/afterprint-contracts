@@ -5,7 +5,7 @@
 ```bash
 rustup target add wasm32v1-none
 cargo install --locked stellar-cli
-cargo test --workspace
+cargo test --workspace --lib
 ```
 
 ## Workflow
@@ -14,7 +14,7 @@ cargo test --workspace
 2. Branch from `main`: `git checkout -b feat/short-description`.
 3. One logical change per commit, [Conventional Commits](https://www.conventionalcommits.org/) format: `type(scope): description` (e.g. `feat(custody-registry): add revoke method`).
 4. Every public function needs a unit test covering both an authorized call and an unauthorized call that should fail.
-5. `cargo test --workspace` and `cargo build --workspace --target wasm32v1-none --release` must both pass before opening a PR.
+5. `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets -- -D warnings`, `cargo test --workspace --lib`, and `cargo build --workspace --target wasm32v1-none --release` must all pass before opening a PR. (`--lib` avoids building the `cdylib` for tests, which fails on Windows GNU toolchains with "export ordinal too large"; CI on Linux is unaffected.)
 6. Open a PR against `main`. CI must pass.
 
 ## Code standards

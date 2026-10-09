@@ -25,17 +25,26 @@ Raw evidence, personal data, and case content are **never stored on-chain** — 
 
 ## Architecture
 
-| Contract | Purpose | Key methods |
+| Contract | Purpose | Methods |
 |---|---|---|
-| `case_registry` | Registers opaque case references, admin address, and metadata hashes. | `register`, `set_status`, `get` |
-| `evidence_anchor_registry` | Anchors an immutable manifest hash per evidence version. Once anchored, it cannot be overwritten. | `anchor`, `get` |
-| `custody_registry` | Append-only custody transfer log with monotonic timestamps and actor signatures. | `transfer`, `get_event` |
-| `attestation_registry` | Immutable attestation proofs linking a subject reference to a statement hash. | `attest`, `get` |
-| `access_grant_registry` | Cross-organization access policies and revocation proofs. | `grant`, `revoke`, `has_grant` |
+| `case_registry` | Registers opaque case references with a controller, a metadata hash, and a status. Registration needs both the admin and the case controller to sign. | `register`, `set_status`, `get`, `admin`, `bump` |
+| `evidence_anchor_registry` | Anchors an immutable manifest hash per evidence version. Identical retries are no-ops; conflicting values are rejected. | `anchor`, `get`, `controller`, `bump` |
+| `custody_registry` | Append-only custody log. Each transfer commits to the previous head hash and must be signed by the current custodian. | `register`, `transfer`, `head`, `event`, `controller`, `bump_head`, `bump_event` |
+| `attestation_registry` | Immutable attestations linking a subject reference to a statement hash. | `attest`, `get`, `controller`, `bump` |
+| `access_grant_registry` | Access policy grants with permanent revocation: a revoked reference can never be granted again. | `grant`, `revoke`, `get`, `has_grant`, `controller`, `bump` |
 
 Each contract is deployed independently and owned by a single `admin`/`controller` address set at construction, so `afterprint-api` (the off-chain service that calls into these) can rotate its own signing key without redeploying contracts.
 
-## Deployed contracts — Stellar Testnet
+## Versions and deployments
+
+| Version | Status |
+|---|---|
+| **v0.2.0** (this source) | Typed errors instead of panics, `#[contractevent]` events, network-maximum storage lifetimes, keep-alive `bump` functions, `has_grant`, and 60 tests. **Not yet deployed.** |
+| v0.1.0 | The contracts deployed below. They are live on testnet but do not match this source. |
+
+Redeploy with `./scripts/deploy.sh` and update the table below before pointing `afterprint-api` at v0.2.0. The v0.2.0 event shapes differ from v0.1.0 (see [CHANGELOG.md](./CHANGELOG.md)).
+
+## Deployed contracts — Stellar Testnet (v0.1.0)
 
 | Contract | Contract ID |
 |---|---|
@@ -56,7 +65,7 @@ rustup target add wasm32v1-none
 cargo install --locked stellar-cli
 
 # Run the unit tests (each contract tests both authorized and unauthorized calls)
-cargo test --workspace
+cargo test --workspace --lib
 
 # Build optimized WASM for all five contracts
 cargo build --workspace --target wasm32v1-none --release
@@ -80,7 +89,7 @@ Issues are scoped by contract and labeled by complexity — see the [issue track
 | | |
 |---|---|
 | **GitHub** | [@helloworld1-star](https://github.com/helloworld1-star) |
-| **Email** | chijiokejoseph20242@gmaill.com |
+| **Email** | devt14985@gmail.com |
 
 ---
 
